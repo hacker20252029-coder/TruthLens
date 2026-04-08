@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TruthLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f16;
+      --panel: #121826;
+      --panel-2: #171f31;
+      --text: #e8edf8;
+      --muted: #9badc9;
+      --line: #27324a;
+      --green: #2fd67f;
+      --yellow: #f8c84b;
+      --red: #ff5c5c;
+      --blue: #70a3ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: radial-gradient(1200px 600px at 80% -20%, #1c2740, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1100px, 92%);
+      margin: 0 auto;
+      padding: 24px 0 40px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eye-logo {
+      width: 42px;
+      height: 24px;
+      border: 2px solid var(--blue);
+      border-radius: 22px / 14px;
+      position: relative;
+      box-shadow: 0 0 14px rgba(112, 163, 255, 0.35);
+    }
+
+    .eye-logo::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      background: var(--blue);
+      border-radius: 50%;
+      position: absolute;
+      top: 4px;
+      left: 14px;
+    }
+
+    .title {
+      font-family: "Syne", sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .tagline {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: #1a2438;
+      border: 1px solid #2b3b5d;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .tab-btn.active {
+      background: #243556;
+      border-color: #5278bf;
+    }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    .input, textarea {
+      width: 100%;
+      background: #0f1624;
+      color: var(--text);
+      border: 1px solid #2a3855;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.96rem;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: linear-gradient(180deg, #3f6ecf, #3054a1);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .upload-card {
+      background: #0f1624;
+      border: 1px dashed #355185;
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .upload-card input { width: 100%; color: var(--muted); }
+    .upload-card small { color: var(--muted); }
+
+    .loading {
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 3px solid #2f3f60;
+      border-top-color: #7fabff;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .results { display: none; }
+
+    .gauge-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 4px 0 16px;
+    }
+
+    .gauge {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: conic-gradient(var(--red) 0deg, #263248 0deg);
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .gauge::after {
+      content: "";
+      width: 136px;
+      height: 136px;
+      border-radius: 50%;
+      background: #0f1522;
+      border: 1px solid #2b3957;
+      position: absolute;
+    }
+
+    .gauge-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .score-value {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-top: 4px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: #0f1624;
+      border: 1px solid #2b3957;
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 96px;
+    }
+
+    .card.disabled {
+      opacity: 0.5;
+      filter: grayscale(0.2);
+    }
+
+    .card-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .bar {
+      width: 100%;
+      height: 9px;
+      background: #1f2a40;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff8686, #ff4f4f);
+      transition: width 0.8s ease;
+    }
+
+    .bar-label {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .channels {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.35;
+      min-height: 18px;
+    }
+
+    .verdict {
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .verdict.green { background: rgba(47, 214, 127, 0.16); border: 1px solid rgba(47, 214, 127, 0.45); color: #a5f0c7; }
+    .verdict.yellow { background: rgba(248, 200, 75, 0.14); border: 1px solid rgba(248, 200, 75, 0.45); color: #ffe4a0; }
+    .verdict.red { background: rgba(255, 92, 92, 0.14); border: 1px solid rgba(255, 92, 92, 0.45); color: #ffc2c2; }
+
+    @media (max-width: 760px) {
+      .upload-grid { grid-template-columns: 1fr; }
+      .title { font-size: 1.5rem; }
+      .gauge { width: 150px; height: 150px; }
+      .gauge::after { width: 112px; height: 112px; }
+      .score-value { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="eye-logo"></div>
+        <div>
+          <h1 class="title">TruthLens</h1>
+          <p class="tagline">Detect. Verify. Trust.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="urlTab">URL</button>
+        <button class="tab-btn" data-tab="textTab">Text</button>
+        <button class="tab-btn" data-tab="mediaTab">Media</button>
+      </div>
+
+      <div id="urlTab" class="tab-pane active">
+        <input id="urlInput" class="input" type="url" placeholder="Paste article URL..." />
+        <div class="actions">
+          <button id="analyzeUrlBtn" class="btn">Analyze URL</button>
+        </div>
+      </div>
+
+      <div id="textTab" class="tab-pane">
+        <textarea id="textInput" placeholder="Paste article text..."></textarea>
+        <div class="actions">
+          <button id="analyzeTextBtn" class="btn">Analyze Text</button>
+        </div>
+      </div>
+
+      <div id="mediaTab" class="tab-pane">
+        <div class="upload-grid">
+          <div class="upload-card">
+            <strong>Upload Image</strong>
+            <input id="imageInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+            <small>JPG, PNG, WEBP</small>
+            <button id="analyzeImageBtn" class="btn">Analyze Image</button>
+          </div>
+          <div class="upload-card">
+            <strong>Upload Audio</strong>
+            <input id="audioInput" type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" />
+            <small>MP3, WAV</small>
+            <button id="analyzeAudioBtn" class="btn">Analyze Audio</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="loadingBox" class="panel loading">
+      <div class="spinner"></div>
+      <div>
+        <div><strong>Analyzing content...</strong></div>
+        <div id="loadingStep" class="tagline">Preparing checks...</div>
+      </div>
+    </section>
+
+    <section id="resultsBox" class="panel results">
+      <div class="gauge-wrap">
+        <div id="gauge" class="gauge">
+          <div class="gauge-inner">
+            <div id="scoreValue" class="score-value">0</div>
+            <div class="score-label">Credibility</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card" id="cardFake">
+          <div class="card-title">🔴 Fake News</div>
+          <div class="bar"><div id="barFake" class="bar-fill"></div></div>
+          <div id="labelFake" class="bar-label">0%</div>
+        </div>
+        <div class="card" id="cardText">
+          <div class="card-title">🤖 AI Text</div>
+          <div class="bar"><div id="barText" class="bar-fill"></div></div>
+          <div id="labelText" class="bar-label">0%</div>
+        </div>
+        <div class="card" id="cardImage">
+          <div class="card-title">🎨 AI Image</div>
+          <div class="bar"><div id="barImage" class="bar-fill"></div></div>
+          <div id="labelImage" class="bar-label">N/A</div>
+        </div>
+        <div class="card" id="cardVoice">
+          <div class="card-title">🎙️ AI Voice</div>
+          <div class="bar"><div id="barVoice" class="bar-fill"></div></div>
+          <div id="labelVoice" class="bar-label">N/A</div>
+        </div>
+        <div class="card" id="cardSpread">
+          <div class="card-title">📡 Coordinated Spread</div>
+          <div class="bar"><div id="barSpread" class="bar-fill"></div></div>
+          <div id="labelSpread" class="bar-label">0%</div>
+          <div id="channelsList" class="channels"></div>
+        </div>
+      </div>
+
+      <div id="verdictBanner" class="verdict yellow">This content has suspicious signals</div>
+    </section>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab-btn");
+    const panes = document.querySelectorAll(".tab-pane");
+    const loadingBox = document.getElementById("loadingBox");
+    const loadingStep = document.getElementById("loadingStep");
+    const resultsBox = document.getElementById("resultsBox");
+    const gauge = document.getElementById("gauge");
+    const scoreValue = document.getElementById("scoreValue");
+    const verdictBanner = document.getElementById("verdictBanner");
+
+    tabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tabs.forEach((t) => t.classList.remove("active"));
+        panes.forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    function setLoading(show, steps = []) {
+      if (!show) {
+        loadingBox.style.display = "none";
+        if (window._stepTimer) clearInterval(window._stepTimer);
+        return;
+      }
+      loadingBox.style.display = "flex";
+      let i = 0;
+      loadingStep.textContent = steps[0] || "Preparing checks...";
+      if (window._stepTimer) clearInterval(window._stepTimer);
+      if (steps.length > 1) {
+        window._stepTimer = setInterval(() => {
+          i = (i + 1) % steps.length;
+          loadingStep.textContent = steps[i];
+        }, 900);
+      }
+    }
+
+    function animateGauge(targetScore) {
+      const bounded = Math.max(0, Math.min(100, targetScore));
+      let current = 0;
+      const color = bounded <= 40 ? "#ff5c5c" : (bounded <= 70 ? "#f8c84b" : "#2fd67f");
+      const timer = setInterval(() => {
+        current += Math.max(1, Math.ceil((bounded - current) / 10));
+        if (current >= bounded) {
+          current = bounded;
+          clearInterval(timer);
+        }
+        scoreValue.textContent = String(current);
+        const deg = (current / 100) * 360;
+        gauge.style.background = `conic-gradient(${color} ${deg}deg, #263248 ${deg}deg)`;
+      }, 24);
+    }
+
+    function animateBar(id, percent) {
+      const p = Math.max(0, Math.min(100, percent));
+      const el = document.getElementById(id);
+      requestAnimationFrame(() => { el.style.width = `${p}%`; });
+    }
+
+    function labelToRisk(result, positiveLabel) {
+      if (!result || typeof result.confidence !== "number") return null;
+      const conf = Math.max(0, Math.min(1, result.confidence));
+      return String(result.label || "").toUpperCase() === positiveLabel ? conf * 100 : (1 - conf) * 100;
+    }
+
+    function setCard(cardId, barId, labelId, risk, disabled) {
+      const card = document.getElementById(cardId);
+      const label = document.getElementById(labelId);
+      if (disabled) {
+        card.classList.add("disabled");
+        label.textContent = "N/A";
+        animateBar(barId, 0);
+        return;
+      }
+      card.classList.remove("disabled");
+      const safe = Math.round(Math.max(0, Math.min(100, risk)));
+      label.textContent = `${safe}% suspicious`;
+      animateBar(barId, safe);
+    }
+
+    function setVerdict(score) {
+      if (score >= 71) {
+        verdictBanner.className = "verdict green";
+        verdictBanner.textContent = "This content appears credible";
+      } else if (score >= 41) {
+        verdictBanner.className = "verdict yellow";
+        verdictBanner.textContent = "This content has suspicious signals";
+      } else {
+        verdictBanner.className = "verdict red";
+        verdictBanner.textContent = "High likelihood of misinformation";
+      }
+    }
+
+    function renderResults(payload) {
+      resultsBox.style.display = "block";
+      const overall = Math.round(payload.overall_credibility_score ?? 50);
+      animateGauge(overall);
+      setVerdict(overall);
+
+      setCard("cardFake", "barFake", "labelFake", payload.fakeRisk, payload.fakeRisk == null);
+      setCard("cardText", "barText", "labelText", payload.aiTextRisk, payload.aiTextRisk == null);
+      setCard("cardImage", "barImage", "labelImage", payload.aiImageRisk, payload.aiImageRisk == null);
+      setCard("cardVoice", "barVoice", "labelVoice", payload.aiVoiceRisk, payload.aiVoiceRisk == null);
+      setCard("cardSpread", "barSpread", "labelSpread", payload.spreadRisk, payload.spreadRisk == null);
+
+      const channels = payload.suspiciousChannels || [];
+      document.getElementById("channelsList").textContent =
+        channels.length ? `Suspicious channels: ${channels.join(", ")}` : "";
+    }
+
+    async function analyzeUrl() {
+      const url = document.getElementById("urlInput").value.trim();
+      if (!url) return alert("Please enter a URL.");
+      resultsBox.style.display = "none";
+      setLoading(true, ["Scraping article...", "Running text checks...", "Running image checks...", "Checking coordinated spread..."]);
+      try {
+        const res = await fetch("/analyze/url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "URL analysis failed");
+
+        const fakeRisk = labelToRisk(data.scores?.fakenews, "FAKE");
+        const aiTextRisk = labelToRisk(data.scores?.ai_text, "AI");
+        const aiImageRisk = labelToRisk(data.scores?.ai_image, "AI_GENERATED");
+        const spreadRisk = typeof data.scores?.spread?.score === "number" ? data.scores.spread.score * 100 : null;
+        const suspiciousChannels = data.scores?.spread?.suspicious_channels || [];
+
+        renderResults({
+          overall_credibility_score: data.overall_credibility_score,
+          fakeRisk, aiTextRisk, aiImageRisk, aiVoiceRisk: null, spreadRisk, suspiciousChannels
+        });
+      } catch (e) {
+        alert(e.message || "Could not analyze URL.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function analyzeText() {
+      const text = document.getElementById("textInput").value.trim();
+      if (!text) return alert("Please enter text.");
+      resultsBox.style.display = "none";
+      setLoading(true, ["Checking fake news patterns...", "Checking AI writing patterns..."]);
+      try {
+        const res = await fetch("/analyze/text", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Text analysis failed");
+
+        const fakeRisk = labelToRisk(data.fakenews, "FAKE");
+        const aiTextRisk = labelToRisk(data.ai_text, "AI");
+        const combinedRisk = [fakeRisk, aiTextRisk].filter((v) => v != null).reduce((a, b) => a + b, 0) / 2;
+        const credibility = Math.round(100 - combinedRisk);
+
+        renderResults({
+          overall_credibility_score: credibility,
+          fakeRisk, aiTextRisk, aiImageRisk: null, aiVoiceRisk: null, spreadRisk: null, suspiciousChannels: []
+        });
+      } catch (e) {
+        alert(e.message || "Could not analyze text.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function analyzeImage() {
+      const file = document.getElementById("imageInput").files[0];
+      if (!file) return alert("Please upload an image.");
+      resultsBox.style.display = "none";
+      setLoading(true, ["Extracting visual features...", "Running AI image detection..."]);
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch("/analyze/image", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Image analysis failed");
+        const aiImageRisk = labelToRisk(data.ai_image, "AI_GENERATED");
+        const credibility = Math.round(100 - (aiImageRisk ?? 50));
+        renderResults({
+          overall_credibility_score: credibility,
+          fakeRisk: null, aiTextRisk: null, aiImageRisk, aiVoiceRisk: null, spreadRisk: null, suspiciousChannels: []
+        });
+      } catch (e) {
+        alert(e.message || "Could not analyze image.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function analyzeAudio() {
+      const file = document.getElementById("audioInput").files[0];
+      if (!file) return alert("Please upload audio.");
+      resultsBox.style.display = "none";
+      setLoading(true, ["Extracting acoustic features...", "Running AI voice detection..."]);
+      try {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch("/analyze/audio", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Audio analysis failed");
+        const aiVoiceRisk = labelToRisk(data.ai_voice, "AI_VOICE");
+        const credibility = Math.round(100 - (aiVoiceRisk ?? 50));
+        renderResults({
+          overall_credibility_score: credibility,
+          fakeRisk: null, aiTextRisk: null, aiImageRisk: null, aiVoiceRisk, spreadRisk: null, suspiciousChannels: []
+        });
+      } catch (e) {
+        alert(e.message || "Could not analyze audio.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    document.getElementById("analyzeUrlBtn").addEventListener("click", analyzeUrl);
+    document.getElementById("analyzeTextBtn").addEventListener("click", analyzeText);
+    document.getElementById("analyzeImageBtn").addEventListener("click", analyzeImage);
+    document.getElementById("analyzeAudioBtn").addEventListener("click", analyzeAudio);
+  </script>
+</body>
+</html>
