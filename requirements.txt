@@ -1,0 +1,15 @@
+flask
+flask-cors
+scikit-learn
+pandas
+numpy
+joblib
+beautifulsoup4
+requests
+newspaper3k
+librosa
+torch
+torchvision
+pillow
+transformers
+google-api-python-client
