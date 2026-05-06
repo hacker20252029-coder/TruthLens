@@ -54,16 +54,23 @@ def extract_voice_features(audio_path: str) -> np.ndarray:
 _MODEL_PATH = Path(__file__).resolve().parent / "voice_model.pkl"
 _SCALER_PATH = Path(__file__).resolve().parent / "voice_scaler.pkl"
 
-_MODEL = joblib.load(_MODEL_PATH)
-_SCALER = joblib.load(_SCALER_PATH)
+_MODEL = None
+_SCALER = None
+
+def _get_model():
+    global _MODEL, _SCALER
+    if _MODEL is None:
+        _MODEL = joblib.load(_MODEL_PATH)
+        _SCALER = joblib.load(_SCALER_PATH)
+    return _MODEL, _SCALER
 
 
 def _predict_from_features(features: np.ndarray) -> Dict[str, float | str]:
     x = features.reshape(1, -1)
-    x_scaled = _SCALER.transform(x)
-
-    pred = int(_MODEL.predict(x_scaled)[0])
-    proba = _MODEL.predict_proba(x_scaled)[0]
+    model, scaler = _get_model()
+    x_scaled = scaler.transform(x)
+    pred = int(model.predict(x_scaled)[0])
+    proba = model.predict_proba(x_scaled)[0]
 
     confidence = float(proba[pred])
     label = "AI_VOICE" if pred == 1 else "REAL_VOICE"
@@ -76,8 +83,11 @@ def predict_voice(audio_path: str) -> Dict[str, float | str]:
 
 
 def predict_voice_from_bytes(audio_bytes: bytes) -> Dict[str, float | str]:
-    with NamedTemporaryFile(delete=True, suffix=".wav") as temp_file:
+    with NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
         temp_file.write(audio_bytes)
-        temp_file.flush()
-        features = extract_voice_features(temp_file.name)
+        tmp_path = temp_file.name
+    try:
+        features = extract_voice_features(tmp_path)
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
     return _predict_from_features(features)

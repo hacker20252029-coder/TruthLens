@@ -33,7 +33,13 @@ def _build_model() -> nn.Module:
     return model
 
 
-_MODEL = _build_model()
+_MODEL = None
+
+def _get_model():
+    global _MODEL
+    if _MODEL is None:
+        _MODEL = _build_model()
+    return _MODEL
 
 
 def _extract_exif(image: Image.Image) -> Dict[str, str]:
@@ -57,7 +63,7 @@ def _run_inference(image: Image.Image) -> Tuple[int, float]:
     tensor = _TRANSFORM(image).unsqueeze(0).to(_DEVICE)
 
     with torch.no_grad():
-        logits = _MODEL(tensor)
+        logits = _get_model()(tensor)
         probs = torch.softmax(logits, dim=1)[0]
         pred_idx = int(torch.argmax(probs).item())
         confidence = float(probs[pred_idx].item())

@@ -64,15 +64,22 @@ def extract_features(text: str) -> Dict[str, float]:
 
 
 _MODEL_PATH = Path(__file__).resolve().parent / "aidetector_model.pkl"
-_MODEL = joblib.load(_MODEL_PATH)
+_MODEL = None
+
+def _get_model():
+    global _MODEL
+    if _MODEL is None:
+        _MODEL = joblib.load(_MODEL_PATH)
+    return _MODEL
 
 
 def predict_ai_text(text: str) -> Dict[str, float | str]:
     features = extract_features(text)
     frame = pd.DataFrame([[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES)
 
-    pred = int(_MODEL.predict(frame)[0])
-    proba = _MODEL.predict_proba(frame)[0]
+    model = _get_model()
+    pred = int(model.predict(frame)[0])
+    proba = model.predict_proba(frame)[0]
 
     confidence = float(proba[pred])
     label = "AI" if pred == 1 else "HUMAN"

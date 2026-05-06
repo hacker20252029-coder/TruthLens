@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List
-
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 import joblib
 import librosa
 import numpy as np
@@ -87,8 +88,16 @@ def main() -> None:
     scaler = StandardScaler()
     x_scaled = scaler.fit_transform(x)
 
+    x_train, x_test, y_train, y_test = train_test_split(
+        x_scaled, y, test_size=0.2, random_state=42
+    )
+
     model = RandomForestClassifier(n_estimators=200, random_state=42)
-    model.fit(x_scaled, y)
+    model.fit(x_train, y_train)
+
+    y_pred = model.predict(x_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Accuracy: {accuracy:.4f}")
 
     joblib.dump(model, model_path)
     joblib.dump(scaler, scaler_path)

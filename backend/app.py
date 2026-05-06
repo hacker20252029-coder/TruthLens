@@ -7,9 +7,11 @@ from typing import Any, Dict
 
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+import os
+from dotenv import load_dotenv
 
-
-YOUTUBE_API_KEY = "your-key-here"
+load_dotenv()
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 
 
 BACKEND_DIR = Path(__file__).resolve().parent

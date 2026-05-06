@@ -46,15 +46,23 @@ def clean_text(text: str) -> str:
 _MODEL_PATH = Path(__file__).resolve().parent / "fakenews_model.pkl"
 _VECTORIZER_PATH = Path(__file__).resolve().parent / "tfidf.pkl"
 
-_MODEL = joblib.load(_MODEL_PATH)
-_VECTORIZER = joblib.load(_VECTORIZER_PATH)
+_MODEL = None
+_VECTORIZER = None
+
+def _get_model():
+    global _MODEL, _VECTORIZER
+    if _MODEL is None:
+        _MODEL = joblib.load(_MODEL_PATH)
+        _VECTORIZER = joblib.load(_VECTORIZER_PATH)
+    return _MODEL, _VECTORIZER
 
 
 def predict_fakenews(text: str) -> Dict[str, float | str]:
+    model, vectorizer = _get_model()
     cleaned = clean_text(text)
-    features = _VECTORIZER.transform([cleaned])
-    pred = int(_MODEL.predict(features)[0])
-    proba = _MODEL.predict_proba(features)[0]
+    features = vectorizer.transform([cleaned])
+    pred = int(model.predict(features)[0])
+    proba = model.predict_proba(features)[0]
 
     confidence = float(proba[pred])
     label = "FAKE" if pred == 1 else "REAL"
